@@ -5,6 +5,7 @@
 #include "poset.h"
 
 #include <iostream>
+#include <cstring>
 #include <unordered_map>
 #include <unordered_set>
 #include <queue>
@@ -52,6 +53,10 @@ void print_transposed() {
     }
 }
 
+bool same_value(const char *v1, const char *v2) {
+    return strcmp(v1, v2);
+}
+
 bool poset_exists(uint32_t id) {
     return posets.count(id) > 0;
 }
@@ -59,8 +64,9 @@ bool poset_exists(uint32_t id) {
 uint32_t poset_new() {
     posets[next_poset_id].clear();
     transposed[next_poset_id].clear();
-    string_map[next_poset_id].first.clear();
-    string_map[next_poset_id].second = 0;
+    std::pair<std::unordered_map < std::string, uint64_t>, uint64_t> &string_map_id = string_map[next_poset_id];
+    string_map_id.first.clear();
+    string_map_id.second = 0;
     return next_poset_id++;
 }
 
@@ -79,42 +85,61 @@ size_t poset_size(uint32_t id) {
 }
 
 bool poset_insert(uint32_t id, const char *value) {
+    if(!value) {
+        return false;
+    }
     if (!poset_exists(id)) {
         return false;
     }
-    if (string_map[id].first.count(value)) {
+    std::pair<std::unordered_map < std::string, uint64_t>, uint64_t> &string_map_id = string_map[id];
+    if (string_map_id.first.count(value)) {
         return false;
     }
-    uint32_t string_id = string_map[id].second++;
-    string_map[id].first[value] = string_id;
+    uint32_t string_id = string_map_id.second++;
+    string_map_id.first[value] = string_id;
     posets[id][string_id].clear();
     transposed[id][string_id].clear();
     return true;
 }
 
 bool poset_test(uint32_t id, const char *value1, const char *value2) {
+    if(!value1 || !value2) {
+        return false;
+    }
     if (!poset_exists(id)) {
         return false;
     }
-    if (string_map[id].first.count(value1) == 0
-        || string_map[id].first.count(value2) == 0) {
+    std::unordered_map < std::string, uint64_t> &m = string_map[id].first;
+    if (m.count(value1) == 0
+        || m.count(value2) == 0) {
         return false;
     }
-    uint64_t v1 = string_map[id].first[value1];
-    uint64_t v2 = string_map[id].first[value2];
-    return posets[id][v1].find(v2) != posets[id][v1].end();
+    if(same_value(value1, value2)) {
+        return true;
+    }
+    uint64_t v1 = m[value1];
+    uint64_t v2 = m[value2];
+    std::unordered_set < uint64_t> &outgoing = posets[id][v1];
+    return outgoing.find(v2) != outgoing.end();
 }
 
 void transitive_closure(uint32_t id, uint64_t v1, uint64_t v2) {
-    for (auto it = posets[id][v2].begin(); it != posets[id][v2].end(); ++it) {
-        if (posets[id][v1].find(*it) == posets[id][v1].end()) {
-            posets[id][v1].insert(*it);
-            transposed[id][*it].insert(v1);
+    std::unordered_map<uint64_t, std::unordered_set < uint64_t>> &posets_id = posets[id];
+    std::unordered_set < uint64_t> &outgoing1 = posets_id[v1];
+    std::unordered_set < uint64_t> &outgoing2 = posets_id[v2];
+
+    for (auto it = outgoing2.begin(); it != outgoing2.end(); ++it) {
+        if (outgoing1.find(*it) == outgoing1.end()) {
+            outgoing1.insert(*it);
+            posets_id[*it].insert(v1);
         }
     }
 }
 
 bool poset_add(uint32_t id, char const *value1, char const *value2) {
+    if(!value1 || !value2) {
+        return false;
+    }
     if (!poset_exists(id)) {
         return false;
     }
@@ -126,20 +151,25 @@ bool poset_add(uint32_t id, char const *value1, char const *value2) {
     if (poset_test(id, value1, value2) || poset_test(id, value2, value1)) {
         return false;
     }
+    std::unordered_map<uint64_t, std::unordered_set < uint64_t>> &transposed_id = transposed[id];
     uint64_t v1 = m[value1];
     uint64_t v2 = m[value2];
     posets[id][v1].insert(v2);
-    transposed[id][v2].insert(v1);
+    transposed_id[v2].insert(v1);
     transitive_closure(id, v1, v2);
-    for (auto it = transposed[id][v1].begin(); it != transposed[id][v1].end(); ++it) {
+    std::unordered_set < uint64_t> &incoming = transposed_id[v1];
+    for (auto it = incoming.begin(); it != incoming.end(); ++it) {
         transitive_closure(id, *it, v1);
     }
     return true;
 }
 
 bool longer_path(uint32_t id, uint64_t v1, uint64_t v2) {
-    for (auto it = posets[id][v1].begin(); it != posets[id][v1].end(); ++it) {
-        for (auto it2 = posets[id][*it].begin(); it2 != posets[id][*it].end(); ++it2) {
+    std::unordered_map<uint64_t, std::unordered_set < uint64_t>> &posets_id = posets[id];
+    std::unordered_set < uint64_t> &outgoing = posets_id[v1];
+
+    for (auto it = outgoing.begin(); it != outgoing.end(); ++it) {
+        for (auto it2 = posets_id[*it].begin(); it2 != posets_id[*it].end(); ++it2) {
             if (*it2 == v2) {
               return true;
             }
@@ -149,18 +179,22 @@ bool longer_path(uint32_t id, uint64_t v1, uint64_t v2) {
 }
 
 bool poset_del(uint32_t id, char const *value1, char const *value2) {
+    if(!value1 || !value2) {
+        return false;
+    }
     if (!poset_exists(id)) {
         return false;
     }
-    if (string_map[id].first.count(value1) == 0
-        || string_map[id].first.count(value2) == 0) {
+    std::unordered_map < std::string, uint64_t> &m = string_map[id].first;
+    if (m.count(value1) == 0
+        || m.count(value2) == 0) {
         return false;
     }
     if (!poset_test(id, value1, value2)) {
         return false;
     }
-    uint64_t v1 = string_map[id].first[value1];
-    uint64_t v2 = string_map[id].first[value2];
+    uint64_t v1 = m[value1];
+    uint64_t v2 = m[value2];
     if (longer_path(id, v1, v2)) {
         return false;
     }
@@ -170,22 +204,32 @@ bool poset_del(uint32_t id, char const *value1, char const *value2) {
 }
 
 bool poset_remove(uint32_t id, const char *value) {
+    if(!value) {
+        return false;
+    }
     if (!poset_exists(id)) {
         return false;
     }
-    if (string_map[id].first.count(value) == 0) {
+    std::unordered_map < std::string, uint64_t> &m = string_map[id].first;
+    if (m.count(value) == 0) {
         return false;
     }
-    uint64_t v = string_map[id].first[value];
-    for (auto it = posets[id][v].begin(); it != posets[id][v].end(); ++it) {
-        transposed[id][*it].erase(v);
+
+    uint64_t v = m[value];
+    std::unordered_map<uint64_t, std::unordered_set < uint64_t>> &posets_id = posets[id];
+    std::unordered_set < uint64_t> &outgoing = posets_id[v];
+    std::unordered_map<uint64_t, std::unordered_set < uint64_t>> &transposed_id = transposed[id];
+    std::unordered_set < uint64_t> &incoming = transposed_id[v];
+
+    for (auto it = outgoing.begin(); it != outgoing.end(); ++it) {
+        transposed_id[*it].erase(v);
     }
     posets[id].erase(v);
-    for (auto it = transposed[id][v].begin(); it != transposed[id][v].end(); ++it) {
-        posets[id][*it].erase(v);
+    for (auto it = incoming.begin(); it != incoming.end(); ++it) {
+        posets_id[*it].erase(v);
     }
-    transposed[id].erase(v);
-    string_map[id].first.erase(value);
+    transposed_id.erase(v);
+    m.erase(value);
     return true;
 }
 
