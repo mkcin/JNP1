@@ -13,6 +13,13 @@
 
 namespace {
 
+#ifndef NDEBUG
+    const bool debug = true;
+#else
+    const bool debug = false;
+
+#endif
+
     using neighbours_set_t = std::unordered_set<uint64_t>;
     using poset_t = std::unordered_map<uint64_t, neighbours_set_t>;
     using string_id_map_t = std::unordered_map<std::string, uint64_t>;
