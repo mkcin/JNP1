@@ -295,78 +295,78 @@ void poset_clear(uint32_t id) {
         transposed[id].clear();
         std::pair<string_id_map_t, uint64_t> &string_map_id = string_maps[id];
         string_map_id.first.clear();
-        string_map_id.second;
+        string_map_id.second = 0;
     }
     return;
 }
-
-int main() {
-    poset_new();
-    std::cout << poset_size(0) << "\n";
-    const char *a = "a";
-    poset_insert(0, a);
-    std::cout << poset_size(0) << "\n";
-    const char *b = "b";
-    poset_insert(0, b);
-    std::cout << poset_size(0) << "\n";
-    const char *c = "c";
-    poset_insert(0, c);
-    std::cout << poset_size(0) << "\n";
-    const char *d = "d";
-    poset_insert(0, d);
-    std::cout << poset_size(0) << "\n";
-    const char *e = "e";
-    poset_insert(0, e);
-    std::cout << poset_size(0) << "\n";
-    const char *f = "f";
-    poset_insert(0, f);
-
-    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a b c d e f
-    poset_add(0, a, b);
-    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a<b c d e f
-    poset_add(0, b, c);
-    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a<b<c d e f
-    poset_add(0, d, e);
-    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a<b<c d<e f
-    poset_add(0, e, f);
-    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a<b<c d<e<f
-    poset_add(0, c, d);
-    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a<b<c<d<e<f
-
-    print_string_map();
-    print_posets();
-    print_transposed();
-
-    // std::cout << "usuwam a: " << poset_remove(0, a) << "\n";
-    // print_string_map();
-    // print_posets();
-    // print_transposed();
-    // std::cout << "usuwam b: " << poset_remove(0, b) << "\n";
-    // print_string_map();
-    // print_posets();
-    // print_transposed();
-    // std::cout << "usuwam c: " << poset_remove(0, c) << "\n";
-    // print_string_map();
-    // print_posets();
-    // print_transposed();
-    // std::cout << "usuwam d: " << poset_remove(0, d) << "\n";
-    // print_string_map();
-    // print_posets();
-    // print_transposed();
-    // std::cout << "usuwam e: " << poset_remove(0, e) << "\n";
-    // print_string_map();
-    // print_posets();
-    // print_transposed();
-    // std::cout << "usuwam f: " << poset_remove(0, f) << "\n";
-    // print_string_map();
-    // print_posets();
-    // print_transposed();
-
-    std::cout << "usuwam a < f: " << poset_del(0, a, f) << "\n";
-    std::cout << "usuwam a < b: " << poset_del(0, a, b) << "\n";
-    std::cout << "usuwam a < c: " << poset_del(0, a, c) << "\n";
-    std::cout << "usuwam a < d: " << poset_del(0, a, d) << "\n";
-    std::cout << "usuwam a < e: " << poset_del(0, a, e) << "\n";
-    std::cout << "usuwam a < f: " << poset_del(0, a, f) << "\n";
-
-}
+//
+//int main() {
+//    poset_new();
+//    std::cout << poset_size(0) << "\n";
+//    const char *a = "a";
+//    poset_insert(0, a);
+//    std::cout << poset_size(0) << "\n";
+//    const char *b = "b";
+//    poset_insert(0, b);
+//    std::cout << poset_size(0) << "\n";
+//    const char *c = "c";
+//    poset_insert(0, c);
+//    std::cout << poset_size(0) << "\n";
+//    const char *d = "d";
+//    poset_insert(0, d);
+//    std::cout << poset_size(0) << "\n";
+//    const char *e = "e";
+//    poset_insert(0, e);
+//    std::cout << poset_size(0) << "\n";
+//    const char *f = "f";
+//    poset_insert(0, f);
+//
+//    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a b c d e f
+//    poset_add(0, a, b);
+//    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a<b c d e f
+//    poset_add(0, b, c);
+//    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a<b<c d e f
+//    poset_add(0, d, e);
+//    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a<b<c d<e f
+//    poset_add(0, e, f);
+//    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a<b<c d<e<f
+//    poset_add(0, c, d);
+//    std::cout << "czy a < f: " << poset_test(0, a, f) << "\n"; // a<b<c<d<e<f
+//
+//    print_string_map();
+//    print_posets();
+//    print_transposed();
+//
+//    // std::cout << "usuwam a: " << poset_remove(0, a) << "\n";
+//    // print_string_map();
+//    // print_posets();
+//    // print_transposed();
+//    // std::cout << "usuwam b: " << poset_remove(0, b) << "\n";
+//    // print_string_map();
+//    // print_posets();
+//    // print_transposed();
+//    // std::cout << "usuwam c: " << poset_remove(0, c) << "\n";
+//    // print_string_map();
+//    // print_posets();
+//    // print_transposed();
+//    // std::cout << "usuwam d: " << poset_remove(0, d) << "\n";
+//    // print_string_map();
+//    // print_posets();
+//    // print_transposed();
+//    // std::cout << "usuwam e: " << poset_remove(0, e) << "\n";
+//    // print_string_map();
+//    // print_posets();
+//    // print_transposed();
+//    // std::cout << "usuwam f: " << poset_remove(0, f) << "\n";
+//    // print_string_map();
+//    // print_posets();
+//    // print_transposed();
+//
+//    std::cout << "usuwam a < f: " << poset_del(0, a, f) << "\n";
+//    std::cout << "usuwam a < b: " << poset_del(0, a, b) << "\n";
+//    std::cout << "usuwam a < c: " << poset_del(0, a, c) << "\n";
+//    std::cout << "usuwam a < d: " << poset_del(0, a, d) << "\n";
+//    std::cout << "usuwam a < e: " << poset_del(0, a, e) << "\n";
+//    std::cout << "usuwam a < f: " << poset_del(0, a, f) << "\n";
+//
+//}
