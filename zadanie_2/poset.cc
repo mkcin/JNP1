@@ -11,21 +11,36 @@
 #include <queue>
 #include <utility>
 
+using neighbours_set_t = std::unordered_set<uint64_t>;
+using poset_t = std::unordered_map <uint64_t, neighbours_set_t>;
+using string_id_map_t = std::unordered_map <std::string, uint64_t>;
 
-std::unordered_map <uint32_t, std::pair<std::unordered_map < std::string, uint64_t>, uint64_t> >
-string_map;
+std::unordered_map <uint32_t, poset_t > &get_posets() {
+    static std::unordered_map <uint32_t, poset_t > posets;
+    return posets;
+}
 
-std::unordered_map <uint32_t, std::unordered_map<uint64_t, std::unordered_set < uint64_t>> >
-posets;
+std::unordered_map <uint32_t, poset_t > &get_transposed() {
+    static std::unordered_map <uint32_t, poset_t > transposed;
+    return transposed;
+}
 
-std::unordered_map <uint32_t, std::unordered_map<uint64_t, std::unordered_set < uint64_t>> >
-transposed;
+std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &get_string_map() {
+    static std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > string_maps;
+    return string_maps;
+}
 
 uint32_t next_poset_id;
 
+uint32_t &get_next_poset_id() {
+    static uint32_t next_poset_id;
+    return next_poset_id;
+}
+
 void print_string_map() {
+    std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &string_maps = get_string_map();
     std::cout << "STRING MAP\n";
-    for (auto it = string_map.begin(); it != string_map.end(); ++it) {
+    for (auto it = string_maps.begin(); it != string_maps.end(); ++it) {
         std::cout << it->first << " " << it->second.second << ":\n";
         for (auto it2 = it->second.first.begin(); it2 != it->second.first.end(); ++it2) {
             std::cout << it2->first << " " << it2->second << "\n";
@@ -34,6 +49,7 @@ void print_string_map() {
 }
 
 void print_posets() {
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
     std::cout << "POSETS\n";
     for (auto it = posets.begin(); it != posets.end(); ++it) {
         std::cout << it->first << ":\n";
@@ -44,6 +60,7 @@ void print_posets() {
 }
 
 void print_transposed() {
+    std::unordered_map <uint32_t, poset_t > &transposed = get_transposed();
     std::cout << "TRANSPOSED\n";
     for (auto it = transposed.begin(); it != transposed.end(); ++it) {
         std::cout << it->first << ":\n";
@@ -54,44 +71,60 @@ void print_transposed() {
 }
 
 bool same_value(const char *v1, const char *v2) {
-    return strcmp(v1, v2);
+    return strcmp(v1, v2) == 0;
 }
 
 bool poset_exists(uint32_t id) {
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
     return posets.count(id) > 0;
 }
 
 uint32_t poset_new() {
+    uint32_t &next_poset_id = get_next_poset_id();
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
+    std::unordered_map <uint32_t, poset_t > &transposed = get_transposed();
+    std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &string_maps = get_string_map();
+
     posets[next_poset_id].clear();
     transposed[next_poset_id].clear();
-    std::pair<std::unordered_map < std::string, uint64_t>, uint64_t> &string_map_id = string_map[next_poset_id];
+    std::pair<string_id_map_t, uint64_t> &string_map_id = string_maps[next_poset_id];
     string_map_id.first.clear();
     string_map_id.second = 0;
     return next_poset_id++;
 }
 
 void poset_delete(uint32_t id) {
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
+    std::unordered_map <uint32_t, poset_t > &transposed = get_transposed();
+    std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &string_maps = get_string_map();
+
     posets.erase(id);
     transposed.erase(id);
-    string_map.erase(id);
+    string_maps.erase(id);
     return;
 }
 
 size_t poset_size(uint32_t id) {
-    if (string_map.count(id)) {
-        return string_map[id].first.size();
+    std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &string_maps = get_string_map();
+
+    if (string_maps.count(id)) {
+        return string_maps[id].first.size();
     }
     return 0;
 }
 
 bool poset_insert(uint32_t id, const char *value) {
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
+    std::unordered_map <uint32_t, poset_t > &transposed = get_transposed();
+    std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &string_maps = get_string_map();
+
     if(!value) {
         return false;
     }
     if (!poset_exists(id)) {
         return false;
     }
-    std::pair<std::unordered_map < std::string, uint64_t>, uint64_t> &string_map_id = string_map[id];
+    std::pair<string_id_map_t, uint64_t> &string_map_id = string_maps[id];
     if (string_map_id.first.count(value)) {
         return false;
     }
@@ -103,13 +136,16 @@ bool poset_insert(uint32_t id, const char *value) {
 }
 
 bool poset_test(uint32_t id, const char *value1, const char *value2) {
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
+    std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &string_maps = get_string_map();
+
     if(!value1 || !value2) {
         return false;
     }
     if (!poset_exists(id)) {
         return false;
     }
-    std::unordered_map < std::string, uint64_t> &m = string_map[id].first;
+    string_id_map_t &m = string_maps[id].first;
     if (m.count(value1) == 0
         || m.count(value2) == 0) {
         return false;
@@ -119,14 +155,16 @@ bool poset_test(uint32_t id, const char *value1, const char *value2) {
     }
     uint64_t v1 = m[value1];
     uint64_t v2 = m[value2];
-    std::unordered_set < uint64_t> &outgoing = posets[id][v1];
+    neighbours_set_t &outgoing = posets[id][v1];
     return outgoing.find(v2) != outgoing.end();
 }
 
 void transitive_closure(uint32_t id, uint64_t v1, uint64_t v2) {
-    std::unordered_map<uint64_t, std::unordered_set < uint64_t>> &posets_id = posets[id];
-    std::unordered_set < uint64_t> &outgoing1 = posets_id[v1];
-    std::unordered_set < uint64_t> &outgoing2 = posets_id[v2];
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
+
+    poset_t &posets_id = posets[id];
+    neighbours_set_t &outgoing1 = posets_id[v1];
+    neighbours_set_t &outgoing2 = posets_id[v2];
 
     for (auto it = outgoing2.begin(); it != outgoing2.end(); ++it) {
         if (outgoing1.find(*it) == outgoing1.end()) {
@@ -137,13 +175,17 @@ void transitive_closure(uint32_t id, uint64_t v1, uint64_t v2) {
 }
 
 bool poset_add(uint32_t id, char const *value1, char const *value2) {
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
+    std::unordered_map <uint32_t, poset_t > &transposed = get_transposed();
+    std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &string_maps = get_string_map();
+
     if(!value1 || !value2) {
         return false;
     }
     if (!poset_exists(id)) {
         return false;
     }
-    std::unordered_map < std::string, uint64_t> &m = string_map[id].first;
+    string_id_map_t &m = string_maps[id].first;
     if (m.count(value1) == 0
         || m.count(value2) == 0) {
         return false;
@@ -151,13 +193,13 @@ bool poset_add(uint32_t id, char const *value1, char const *value2) {
     if (poset_test(id, value1, value2) || poset_test(id, value2, value1)) {
         return false;
     }
-    std::unordered_map<uint64_t, std::unordered_set < uint64_t>> &transposed_id = transposed[id];
+    poset_t &transposed_id = transposed[id];
     uint64_t v1 = m[value1];
     uint64_t v2 = m[value2];
     posets[id][v1].insert(v2);
     transposed_id[v2].insert(v1);
     transitive_closure(id, v1, v2);
-    std::unordered_set < uint64_t> &incoming = transposed_id[v1];
+    neighbours_set_t &incoming = transposed_id[v1];
     for (auto it = incoming.begin(); it != incoming.end(); ++it) {
         transitive_closure(id, *it, v1);
     }
@@ -165,8 +207,10 @@ bool poset_add(uint32_t id, char const *value1, char const *value2) {
 }
 
 bool longer_path(uint32_t id, uint64_t v1, uint64_t v2) {
-    std::unordered_map<uint64_t, std::unordered_set < uint64_t>> &posets_id = posets[id];
-    std::unordered_set < uint64_t> &outgoing = posets_id[v1];
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
+
+    poset_t &posets_id = posets[id];
+    neighbours_set_t &outgoing = posets_id[v1];
 
     for (auto it = outgoing.begin(); it != outgoing.end(); ++it) {
         for (auto it2 = posets_id[*it].begin(); it2 != posets_id[*it].end(); ++it2) {
@@ -179,13 +223,17 @@ bool longer_path(uint32_t id, uint64_t v1, uint64_t v2) {
 }
 
 bool poset_del(uint32_t id, char const *value1, char const *value2) {
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
+    std::unordered_map <uint32_t, poset_t > &transposed = get_transposed();
+    std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &string_maps = get_string_map();
+
     if(!value1 || !value2) {
         return false;
     }
     if (!poset_exists(id)) {
         return false;
     }
-    std::unordered_map < std::string, uint64_t> &m = string_map[id].first;
+    string_id_map_t &m = string_maps[id].first;
     if (m.count(value1) == 0
         || m.count(value2) == 0) {
         return false;
@@ -204,22 +252,26 @@ bool poset_del(uint32_t id, char const *value1, char const *value2) {
 }
 
 bool poset_remove(uint32_t id, const char *value) {
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
+    std::unordered_map <uint32_t, poset_t > &transposed = get_transposed();
+    std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &string_maps = get_string_map();
+
     if(!value) {
         return false;
     }
     if (!poset_exists(id)) {
         return false;
     }
-    std::unordered_map < std::string, uint64_t> &m = string_map[id].first;
+    string_id_map_t &m = string_maps[id].first;
     if (m.count(value) == 0) {
         return false;
     }
 
     uint64_t v = m[value];
-    std::unordered_map<uint64_t, std::unordered_set < uint64_t>> &posets_id = posets[id];
-    std::unordered_set < uint64_t> &outgoing = posets_id[v];
-    std::unordered_map<uint64_t, std::unordered_set < uint64_t>> &transposed_id = transposed[id];
-    std::unordered_set < uint64_t> &incoming = transposed_id[v];
+    poset_t &posets_id = posets[id];
+    neighbours_set_t &outgoing = posets_id[v];
+    poset_t &transposed_id = transposed[id];
+    neighbours_set_t &incoming = transposed_id[v];
 
     for (auto it = outgoing.begin(); it != outgoing.end(); ++it) {
         transposed_id[*it].erase(v);
@@ -234,10 +286,16 @@ bool poset_remove(uint32_t id, const char *value) {
 }
 
 void poset_clear(uint32_t id) {
+    std::unordered_map <uint32_t, poset_t > &posets = get_posets();
+    std::unordered_map <uint32_t, poset_t > &transposed = get_transposed();
+    std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t> > &string_maps = get_string_map();
+
     if (poset_exists(id)) {
-        posets.erase(id);
-        transposed.erase(id);
-        string_map.erase(id);
+        posets[id].clear();
+        transposed[id].clear();
+        std::pair<string_id_map_t, uint64_t> &string_map_id = string_maps[id];
+        string_map_id.first.clear();
+        string_map_id.second;
     }
     return;
 }
