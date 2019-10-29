@@ -16,8 +16,9 @@
 #ifdef __cplusplus
 #include <iostream>
 extern "C"{
+    namespace jnp1 {
 #endif
-namespace jnp1 {
+
 
 
     uint32_t poset_new();
@@ -40,7 +41,7 @@ namespace jnp1 {
 
 #ifdef __cplusplus
     }
-    //}
-#endif
 }
+#endif
+
 #endif //POSET_POSET_H
