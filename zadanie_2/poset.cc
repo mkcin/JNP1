@@ -371,7 +371,7 @@ namespace jnp1 {
             return false;
         }
         bool can_be_deleted = true;
-        if (!poset_test_internal(id, value1, value2)) {
+        if (!poset_test_internal(id, value1, value2) || same_value(value1, value2)) {
             can_be_deleted = false;
         }
         else {
