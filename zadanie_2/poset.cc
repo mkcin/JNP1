@@ -1,4 +1,3 @@
-//#include <iostream>
 #include <cstring>
 #include <unordered_map>
 #include <unordered_set>
@@ -17,9 +16,11 @@ namespace {
     void cerr_init() {
         static std::ios_base::Init init;
     }
-
+    //Typ seta trzymającego identyfikatory stringów
     using neighbours_set_t = std::unordered_set<uint64_t>;
+    //Typ  mapy trzymającej sąsiadów dla każdego identyfikatora stringa
     using poset_t = std::unordered_map<uint64_t, neighbours_set_t>;
+    //Typ mapy trzymającej identyfikatory dla każdego stringa
     using string_id_map_t = std::unordered_map<std::string, uint64_t>;
 
     //Mapa, która przechowuje grafy reprezentujące posety
@@ -41,10 +42,11 @@ namespace {
     }
 
     //Zmienna służąca nadaniu unikatowych id dla nowych posetów
-    uint32_t &get_next_poset_id() {
-        static uint32_t next_poset_id;
-        return next_poset_id;
-    }
+    uint32_t next_poset_id;
+//    uint32_t &get_next_poset_id() {
+//        static uint32_t next_poset_id;
+//        return next_poset_id;
+//    }
 
     bool same_value(const char *v1, const char *v2) {
         return strcmp(v1, v2) == 0;
@@ -114,7 +116,7 @@ namespace jnp1 {
         if (debug) {
             std::cerr << "poset_new()\n";
         }
-        uint32_t &next_poset_id = get_next_poset_id();
+        //next_poset_id = get_next_poset_id();
         std::unordered_map <uint32_t, poset_t> &posets = get_posets();
         std::unordered_map <uint32_t, poset_t> &transposed = get_transposed();
         std::unordered_map <uint32_t, std::pair<string_id_map_t, uint64_t>> &string_maps = get_string_map();
